@@ -14,7 +14,7 @@ public class WarehouseInventorySwingApp {
     // MySQL database connection details
     private static final String DB_URL = "jdbc:mysql://localhost:3306/warehouse";
     private static final String DB_USER = "root"; // replace with your MySQL username
-    private static final String DB_PASSWORD = "12Itachi"; // replace with your MySQL password
+    private static final String DB_PASSWORD = ""; // replace with your MySQL password
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(WarehouseInventorySwingApp::createAndShowGUI);
