@@ -1,5 +1,8 @@
 package mvcstockesystem.m;
 import javax.swing.*;
+
+import mvcstockesystem.v.WarehouseInventorySwingApp;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.HashSet;
@@ -53,7 +56,7 @@ public class SimpleDivisionSelector {
             String selected = divisionList.getSelectedValue();
             if (selected != null) {
                 JOptionPane.showMessageDialog(frame, "Opening division: " + selected);
-                // You could launch another window here for division-specific UI
+                SwingUtilities.invokeLater(WarehouseInventorySwingApp::createAndShowGUI);
             } else {
                 JOptionPane.showMessageDialog(frame, "Please select a division to open.");
             }
