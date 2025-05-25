@@ -1,4 +1,5 @@
 package mvcstockesystem.m;
+import mvcstockesystem.c.DBConfig;
 import mvcstockesystem.v.WarehouseInventorySwingApp;
 import javax.swing.*;
 import java.awt.*;
@@ -8,14 +9,14 @@ import java.util.ArrayList;
 
 public class DivisionSelectorApp {
 
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/warehouse";
-    private static final String DB_USER = "";
-    private static final String DB_PASSWORD = "";
 
-    public static void main(String[] args) {
+    private static DBConfig dbConfig;
+
+    public static void launch(DBConfig config) {
+        dbConfig = config;
         SwingUtilities.invokeLater(DivisionSelectorApp::createAndShowGUI);
     }
-
+  
     private static void createAndShowGUI() {
         JFrame frame = new JFrame("Division Manager");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -53,7 +54,7 @@ public class DivisionSelectorApp {
         openButton.addActionListener(e -> {
             String selectedDivision = divisionList.getSelectedValue();
             if (selectedDivision != null) {
-                WarehouseInventorySwingApp.launchForDivision(selectedDivision); // new method you'll add
+                WarehouseInventorySwingApp.launchForDivision(selectedDivision,dbConfig); // new method you'll add
             }
         });
 
@@ -62,7 +63,7 @@ public class DivisionSelectorApp {
 
     private static void loadDivisions(DefaultListModel<String> model) {
         model.clear();
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = DriverManager.getConnection(dbConfig.getJdbcUrl(), dbConfig.username, dbConfig.password);
              ResultSet rs = conn.getMetaData().getTables(null, null, "inventory_%", new String[]{"TABLE"})) {
             while (rs.next()) {
                 String tableName = rs.getString("TABLE_NAME");
@@ -83,7 +84,7 @@ public class DivisionSelectorApp {
                 "type VARCHAR(50), " +
                 "date_of_arrival DATE" +
                 ")";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = DriverManager.getConnection(dbConfig.getJdbcUrl(), dbConfig.username, dbConfig.password);
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(query);
         } catch (SQLException e) {

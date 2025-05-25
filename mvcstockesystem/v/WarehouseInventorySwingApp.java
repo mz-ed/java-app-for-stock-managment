@@ -1,4 +1,5 @@
 package mvcstockesystem.v;
+import mvcstockesystem.c.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -11,19 +12,13 @@ import java.util.Date;
 
 public class WarehouseInventorySwingApp {
 
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/warehouse";
-    private static final String DB_USER = "";
-    private static final String DB_PASSWORD = "";
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> createAndShowGUI("default")); // fallback division
+
+    public static void launchForDivision(String division ,DBConfig db) {
+        SwingUtilities.invokeLater(() -> createAndShowGUI(division,db));
     }
 
-    public static void launchForDivision(String division) {
-        SwingUtilities.invokeLater(() -> createAndShowGUI(division));
-    }
-
-    public static void createAndShowGUI(String division) {
+    public static void createAndShowGUI(String division ,DBConfig db) {
         JFrame frame = new JFrame("Warehouse Inventory - Division: " + division);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 500);
@@ -76,7 +71,7 @@ public class WarehouseInventorySwingApp {
         frame.add(tableScrollPane, BorderLayout.CENTER);
         frame.add(buttonPanel, BorderLayout.SOUTH);
 
-        loadInventoryData(model, division);
+        loadInventoryData(model, division , db);
 
         addButton.addActionListener((ActionEvent e) -> {
             String name = itemNameField.getText();
@@ -93,7 +88,7 @@ public class WarehouseInventorySwingApp {
                 int quantity = Integer.parseInt(quantityStr);
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                 Date arrivalDate = sdf.parse(dateStr);
-                insertItemIntoDatabase(name, quantity, type, division, sdf.format(arrivalDate));
+                insertItemIntoDatabase(name, quantity, type, division, sdf.format(arrivalDate),db);
                 model.addRow(new Object[]{name, quantity, type, division, sdf.format(arrivalDate)});
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(frame, "Error: " + ex.getMessage());
@@ -108,7 +103,7 @@ public class WarehouseInventorySwingApp {
             int selectedRow = table.getSelectedRow();
             if (selectedRow != -1) {
                 String name = (String) model.getValueAt(selectedRow, 0);
-                deleteItemFromDatabase(name, division);
+                deleteItemFromDatabase(name, division,db);
                 model.removeRow(selectedRow);
             } else {
                 JOptionPane.showMessageDialog(frame, "Please select a row to remove.");
@@ -132,7 +127,7 @@ public class WarehouseInventorySwingApp {
                     int quantity = Integer.parseInt(quantityStr);
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                     Date arrivalDate = sdf.parse(dateStr);
-                    updateItemInDatabase(name, quantity, type, division, sdf.format(arrivalDate));
+                    updateItemInDatabase(name, quantity, type, division, sdf.format(arrivalDate),db);
                     model.setValueAt(name, selectedRow, 0);
                     model.setValueAt(quantity, selectedRow, 1);
                     model.setValueAt(type, selectedRow, 2);
@@ -149,13 +144,13 @@ public class WarehouseInventorySwingApp {
                 JOptionPane.showMessageDialog(frame, "Please select a row to update.");
             }
         });
-
+         
         frame.setVisible(true);
     }
 
-    private static void loadInventoryData(DefaultTableModel model, String division) {
+    private static void loadInventoryData(DefaultTableModel model, String division , DBConfig db) {
         String tableName = "inventory_" + division.toLowerCase();
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = DriverManager.getConnection(db.getJdbcUrl(), db.username, db.password);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM `" + tableName + "`")) {
             while (rs.next()) {
@@ -172,10 +167,10 @@ public class WarehouseInventorySwingApp {
         }
     }
 
-    private static void insertItemIntoDatabase(String name, int quantity, String type, String division, String dateOfArrival) {
+    private static void insertItemIntoDatabase(String name, int quantity, String type, String division, String dateOfArrival,DBConfig db) {
         String tableName = "inventory_" + division.toLowerCase();
         String query = "INSERT INTO `" + tableName + "` (item_name, quantity, type, date_of_arrival) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = DriverManager.getConnection(db.getJdbcUrl(), db.username, db.password);
              PreparedStatement pstmt = conn.prepareStatement(query)) {
             pstmt.setString(1, name);
             pstmt.setInt(2, quantity);
@@ -187,10 +182,10 @@ public class WarehouseInventorySwingApp {
         }
     }
 
-    private static void deleteItemFromDatabase(String name, String division) {
+    private static void deleteItemFromDatabase(String name, String division,DBConfig db) {
         String tableName = "inventory_" + division.toLowerCase();
         String query = "DELETE FROM `" + tableName + "` WHERE item_name = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = DriverManager.getConnection(db.getJdbcUrl(), db.username, db.password);
              PreparedStatement pstmt = conn.prepareStatement(query)) {
             pstmt.setString(1, name);
             pstmt.executeUpdate();
@@ -199,10 +194,10 @@ public class WarehouseInventorySwingApp {
         }
     }
 
-    private static void updateItemInDatabase(String name, int quantity, String type, String division, String dateOfArrival) {
+    private static void updateItemInDatabase(String name, int quantity, String type, String division, String dateOfArrival, DBConfig db )  {
         String tableName = "inventory_" + division.toLowerCase();
         String query = "UPDATE `" + tableName + "` SET quantity = ?, type = ?, date_of_arrival = ? WHERE item_name = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = DriverManager.getConnection(db.getJdbcUrl(), db.username, db.password);
              PreparedStatement pstmt = conn.prepareStatement(query)) {
             pstmt.setInt(1, quantity);
             pstmt.setString(2, type);
